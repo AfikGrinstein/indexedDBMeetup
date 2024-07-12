@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>IndexedDB Demo</title>
+    <script type="module">
+        import { faker } from 'https://esm.sh/@faker-js/faker';
+        import { openDB } from 'https://cdn.jsdelivr.net/npm/idb@8/+esm';
+
+        const DATABASE_NAME = "indexeddb-demo";
+        const OBJECT_STORE_NAME = "person";
+
+        async function createIndexedDB() {
+            console.log("Try to create DB...")
+            console.time("DB creation");
+            await openDB(DATABASE_NAME, 1, {
+                upgrade(database) {
+                    if (!database.objectStoreNames.contains(OBJECT_STORE_NAME)) {
+                        database.createObjectStore(OBJECT_STORE_NAME, {autoIncrement: true});
+                        console.log('Person object store created successfully')
+                    }
+                }
+            });
+            console.timeEnd("DB creation");
+            console.log("DB created successfully");
+        }
+
+        async function saveDataToIndexedDB(size) {
+            const data = generateFakePersonsData(size);
+            console.log(`Saving ${size} to person object store...`);
+            console.time("Time to save")
+            const db = await openDB(DATABASE_NAME)
+            db.clear(OBJECT_STORE_NAME)  // truncate person object store before inserting new data
+
+            const tx = db.transaction(OBJECT_STORE_NAME, 'readwrite');
+            const store = tx.objectStore(OBJECT_STORE_NAME)
+            const promises = data.map((item) => store.put(item));
+            await Promise.all([...promises, tx.done]);
+            console.timeEnd("Time to save")
+            console.log("Data saved successfully");
+        }
+
+        function generateFakePersonsData(size) {
+            const persons = [];
+            for (let i = 0; i < size; i++) {
+                persons.push({
+                    name: faker.person.fullName(),
+                    birthDate: faker.date.birthdate({min: 18, max: 80, mode: "age", refDate: 'string'}),
+                    email: faker.internet.email(),
+                    address: faker.location.streetAddress(),
+                    city: faker.location.city(),
+                    country: faker.location.country()
+                });
+            }
+            return persons;
+        }
+
+        async function getAll() {
+            console.time("Get all");
+            const database = await openDB(DATABASE_NAME);
+            const data = await database.getAll(OBJECT_STORE_NAME);
+            console.timeEnd("Get all");
+            console.log(`Get all finished successfully (size: ${data.length})`);
+        }
+
+        async function getById() {
+            const id = document.getElementById('search-id').value;
+            console.log(`Searching for id: ${id}`);
+            console.time("Get by id");
+            const database = await openDB(DATABASE_NAME);
+            const item = await database.get(OBJECT_STORE_NAME, +id);
+            console.timeEnd("Get by id");
+            document.getElementById('search-item').innerText = JSON.stringify(item);
+            console.log(`Get by id finished successfully`);
+        }
+
+        window.createIndexedDB = createIndexedDB;
+        window.saveDataToIndexedDB = saveDataToIndexedDB;
+        window.getAll = getAll;
+        window.getById = getById;
+    </script>
+</head>
+<body>
+    <h1>Hello IndexedDB</h1>
+    <h3>Open browser console to see the magic!</h3>
+
+    <button onclick="createIndexedDB()">Create IndexedDB</button>
+    <button onclick="saveDataToIndexedDB(25000)">Save data</button>
+    <button onclick="getAll()">Get all</button>
+
+    <div style="margin-top: 10px">
+        <label for="search-id">Search by ID: </label><input id="search-id" type="text">
+        <button onclick="getById()">Submit</button>
+    </div>
+
+    <div style="margin-top: 10px">
+        <span id="search-item"></span>
+    </div>
+</body>
+</html>

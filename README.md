@@ -1,2 +1,2 @@
 # indexedDBMeetup
-A small example of using IndexedDB
+A small example for using IndexedDB
