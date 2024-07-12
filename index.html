@@ -16,7 +16,7 @@
             await openDB(DATABASE_NAME, 1, {
                 upgrade(database) {
                     if (!database.objectStoreNames.contains(OBJECT_STORE_NAME)) {
-                        database.createObjectStore(OBJECT_STORE_NAME, {autoIncrement: true});
+                        database.createObjectStore(OBJECT_STORE_NAME, {keyPath: 'id'});
                         console.log('Person object store created successfully')
                     }
                 }
@@ -33,7 +33,7 @@
             db.clear(OBJECT_STORE_NAME)  // truncate person object store before inserting new data
 
             const tx = db.transaction(OBJECT_STORE_NAME, 'readwrite');
-            const store = tx.objectStore(OBJECT_STORE_NAME)
+            const store = tx.store
             const promises = data.map((item) => store.put(item));
             await Promise.all([...promises, tx.done]);
             console.timeEnd("Time to save")
@@ -44,6 +44,7 @@
             const persons = [];
             for (let i = 0; i < size; i++) {
                 persons.push({
+                    id: i,
                     name: faker.person.fullName(),
                     birthDate: faker.date.birthdate({min: 18, max: 80, mode: "age", refDate: 'string'}),
                     email: faker.internet.email(),
