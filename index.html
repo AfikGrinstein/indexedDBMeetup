@@ -11,8 +11,9 @@
         const OBJECT_STORE_NAME = "person";
 
         async function createIndexedDB() {
+            document.getElementById('action-label').innerHTML = "&nbsp;";
             console.log("Try to create DB...")
-            console.time("DB creation");
+            const start = performance.now();
             await openDB(DATABASE_NAME, 1, {
                 upgrade(database) {
                     if (!database.objectStoreNames.contains(OBJECT_STORE_NAME)) {
@@ -21,14 +22,16 @@
                     }
                 }
             });
-            console.timeEnd("DB creation");
+            const end = performance.now();
+            document.getElementById('action-label').innerText = `DB created successfully took ${Math.trunc(end - start)} ms`;
             console.log("DB created successfully");
         }
 
         async function saveDataToIndexedDB(size) {
+            document.getElementById('action-label').innerHTML = "&nbsp;";
             const data = generateFakePersonsData(size);
             console.log(`Saving ${size} to person object store...`);
-            console.time("Time to save")
+            const start = performance.now();
             const db = await openDB(DATABASE_NAME)
             db.clear(OBJECT_STORE_NAME)  // truncate person object store before inserting new data
 
@@ -36,7 +39,8 @@
             const store = tx.store
             const promises = data.map((item) => store.put(item));
             await Promise.all([...promises, tx.done]);
-            console.timeEnd("Time to save")
+            const end = performance.now();
+            document.getElementById('action-label').innerText = `Data saved successfully. took ${Math.trunc(end - start)} ms`;
             console.log("Data saved successfully");
         }
 
@@ -57,21 +61,24 @@
         }
 
         async function getAll() {
-            console.time("Get all");
+            document.getElementById('action-label').innerHTML = "&nbsp;";
+            const start = performance.now();
             const database = await openDB(DATABASE_NAME);
             const data = await database.getAll(OBJECT_STORE_NAME);
-            document.getElementById('get-all-label').innerText = `Total items fetched: ${data.length}`;
-            console.timeEnd("Get all");
+            const end = performance.now();
+            document.getElementById('action-label').innerText = `Total items fetched: ${data.length}. took ${Math.trunc(end - start)} ms`;
             console.log(`Get all finished successfully (size: ${data.length})`);
         }
 
         async function getById() {
+            document.getElementById('action-label').innerHTML = "&nbsp;";
             const id = document.getElementById('search-id').value;
             console.log(`Searching for id: ${id}`);
-            console.time("Get by id");
+            const start = performance.now();
             const database = await openDB(DATABASE_NAME);
             const item = await database.get(OBJECT_STORE_NAME, +id);
-            console.timeEnd("Get by id");
+            const end = performance.now();
+            document.getElementById('action-label').innerText = `Get item took ${Math.trunc(end - start)} ms`;
             document.getElementById('search-item').innerText = JSON.stringify(item);
             console.log(`Get by id finished successfully`);
         }
@@ -89,7 +96,10 @@
     <button onclick="createIndexedDB()">Create IndexedDB</button>
     <button onclick="saveDataToIndexedDB(25000)">Save data</button>
     <button onclick="getAll()">Get all</button>
-    <span id="get-all-label"></span>
+
+    <div>
+        <span id="action-label">&nbsp;</span>
+    </div>
 
     <div style="margin-top: 10px">
         <label for="search-id">Search by ID: </label><input id="search-id" type="text">
