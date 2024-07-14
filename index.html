@@ -37,8 +37,8 @@
 
             const tx = db.transaction(OBJECT_STORE_NAME, 'readwrite');
             const store = tx.store
-            const promises = data.map((item) => store.put(item));
-            await Promise.all([...promises, tx.done]);
+            data.forEach(item => store.put(item));
+            await tx.done;
             const end = performance.now();
             document.getElementById('action-label').innerText = `Data saved successfully. took ${Math.trunc(end - start)} ms`;
             console.log("Data saved successfully");
