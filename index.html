@@ -60,6 +60,7 @@
             console.time("Get all");
             const database = await openDB(DATABASE_NAME);
             const data = await database.getAll(OBJECT_STORE_NAME);
+            document.getElementById('get-all-label').innerText = `Total items fetched: ${data.length}`;
             console.timeEnd("Get all");
             console.log(`Get all finished successfully (size: ${data.length})`);
         }
@@ -88,6 +89,7 @@
     <button onclick="createIndexedDB()">Create IndexedDB</button>
     <button onclick="saveDataToIndexedDB(25000)">Save data</button>
     <button onclick="getAll()">Get all</button>
+    <span id="get-all-label"></span>
 
     <div style="margin-top: 10px">
         <label for="search-id">Search by ID: </label><input id="search-id" type="text">
